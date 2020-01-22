@@ -50,6 +50,15 @@ typedef struct Graph {
 	__device__ void initLevels();
 
 
+    __host__ __device__ unsigned* getNoutGoing();
+    __host__ __device__ unsigned* getSrcsrc();
+    __host__ __device__ unsigned* getPsrc();
+    __host__ __device__ unsigned* getEdgessrcdst();
+    __host__ __device__ unsigned* getEdgessrcwt();
+    __host__ __device__ unsigned getNnodes();
+    __host__ __device__ unsigned getNedges();
+
+
 	unsigned nnodes, nedges;
 	unsigned *noutgoing, *nincoming, *srcsrc, *psrc, *edgessrcdst;
 	foru *edgessrcwt;
@@ -63,6 +72,35 @@ typedef struct Graph {
 } Graph;
 
 static unsigned CudaTest(char *msg);
+//////////////////////////Added for Tangram runs///////////
+inline __host__ __device__ unsigned* Graph::getNoutGoing(){
+    return noutgoing;
+}
+
+inline __host__ __device__ unsigned* Graph::getSrcsrc(){
+    return srcsrc;
+}
+
+inline __host__ __device__ unsigned* Graph::getPsrc(){
+    return psrc;
+}
+
+inline __host__ __device__ unsigned* Graph::getEdgessrcdst(){
+    return edgessrcdst;
+}
+
+inline __host__ __device__ unsigned* Graph::getEdgessrcwt(){
+    return edgessrcwt;
+}
+
+inline __host__ __device__ unsigned Graph::getNnodes(){
+    return nnodes;
+}
+
+inline __host__ __device__ unsigned Graph::getNedges(){
+    return nedges;
+}
+/////////////////////////////////////////////////////////
 
 inline __device__ unsigned Graph::getOutDegree(unsigned src) {
 	if (src < nnodes) {

@@ -13,7 +13,7 @@ __global__ void drelax_child(foru *dist, Graph graph, bool *changed, unsigned st
 __global__ void drelax(foru *dist, Graph graph, bool *changed) {
     unsigned id = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned start = id * (MAXBLOCKSIZE / blockDim.x), end = (id + 1) * (MAXBLOCKSIZE / blockDim.x);
-
+    
     int blocks = (int)ceil((float)(end-start) / (float)BLOCK_DIM);
     int threads = BLOCK_DIM;
     drelax_child<<<blocks, threads>>>(dist, graph, changed, start, end);

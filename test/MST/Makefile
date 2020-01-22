@@ -4,7 +4,7 @@ NAME = mst
 NVCC = nvcc
 KLAP = klap
 
-ARCH = -gencode arch=compute_35,code=sm_35 -gencode arch=compute_52,code=sm_52
+ARCH = -gencode arch=compute_60,code=sm_60 -gencode arch=compute_60,code=sm_60
 FLAGS = -Xcompiler '-fPIC' -dc -m64 --default-stream per-thread
 
 INCLUDE  = -I. -I../../include

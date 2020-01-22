@@ -4,16 +4,19 @@ NAME = sssp
 NVCC = nvcc
 KLAP = klap
 
-ARCH = -gencode arch=compute_35,code=sm_35 -gencode arch=compute_52,code=sm_52
+ARCH = -gencode arch=compute_60,code=sm_60 -gencode arch=compute_60,code=sm_60
 FLAGS = -Xcompiler '-fPIC' -dc -m64 --default-stream per-thread
 
 INCLUDE  = -I. -I../../include
 
 SRC = main.cu
 OBJ = $(SRC:.cu=.o)
-BIN = $(NAME).base $(NAME).aw $(NAME).ab $(NAME).ag
+BIN = $(NAME).tangram_dynamic $(NAME).tangram $(NAME).base $(NAME).aw $(NAME).ab $(NAME).ag
 
 base: $(NAME).base
+tangram: $(NAME).tangram
+tangram_dynamic: $(NAME).tangram_dynamic
+
 
 all: $(BIN)
 

@@ -10,8 +10,8 @@ __global__ void conflictsDetection_child_cdp(int *adjacentListD, int *colors, in
         int j = adjacentListD[i*maxDegree + k];
         if (j>i && (colors[i] == colors[j]))
         {
-            //conflictD[idx] = min(i,j)+1;	
-            //conflictD[idx] = i+1;
+//            conflictD[idx] = min(i,j)+1;	
+//            conflictD[idx] = i+1;
             atomicMax(&conflictD[idx], i+1);	
 
             colors[i] = 0;				// added!!!!!!!!

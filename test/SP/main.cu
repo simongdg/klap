@@ -32,7 +32,7 @@
 #include "lonestargpu/cuda_launch_config.hpp"
 #ifndef _KLAP_
 #include "lonestargpu/cutil_subset.h"
-#include <cub/cub/cub.cuh>
+#include "/home/simon/test/Parallel-forall/code-samples/posts/parallel_reduction_with_shfl/cub/cub/cub.cuh"//<cub/cub/cub.cuh>
 #else
 #define CUDA_SAFE_CALL(x)
 

@@ -100,8 +100,8 @@ int main(int argc, char *argv[]) {
     unsigned *nerr, hnerr;
     KernelConfig kconf;
 
-    cudaFuncSetCacheConfig(drelax, cudaFuncCachePreferShared);
-    cudaGetLastError();
+    //cudaFuncSetCacheConfig(drelax, cudaFuncCachePreferShared);
+    //cudaGetLastError();
 
     hgraph.read((char*)fileName);
     //hgraph.optimize();
@@ -145,6 +145,7 @@ int main(int argc, char *argv[]) {
         //printf("nnodes=%d, blocks=%d, threads=%d\n", graph.nnodes, kconf.getNumberOfBlocks(), kconf.getNumberOfBlockThreads());
         cudaDeviceSetLimit(cudaLimitDevRuntimePendingLaunchCount, graph.nnodes /*32768*/); // Fixed-size pool
         starttime = rtclock();
+        //printf("NumBlocks = %d, NumThreads = %d \n", kconf.getNumberOfBlocks(), kconf.getNumberOfBlockThreads());
         do {
             ++iteration;
             hchanged = false;

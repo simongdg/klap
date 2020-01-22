@@ -31,8 +31,8 @@
  ******************************************************************************/
 
 #pragma once
-
-#include <cub/cub/cub.cuh>
+#include "/home/simon/test/Parallel-forall/code-samples/posts/parallel_reduction_with_shfl/cub/cub/cub.cuh"
+//#include <cub/cub/cub.cuh>
 #include "cutil_subset.h"
 
 /**
