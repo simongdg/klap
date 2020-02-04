@@ -23,7 +23,8 @@ __global__ void decimate (GPUCSRGraph clauses, GPUCSRGraph vars, Edge ed, int *g
     int threads = blockDim.x * gridDim.x;
 
     // NOTE: this is slower because the lower-work computation does not use all SMs.
-
+   // if(threadIdx.x == 0 && blockIdx.x == 0)
+   //     printf("bias_list_len = %d, fixperstep = %d \n", *bias_list_len, fixperstep);
     //for(int l = *bias_list_len - fixperstep + id; l < *bias_list_len; l+=threads)
     for(int l_base = *bias_list_len - fixperstep; l_base < *bias_list_len; l_base+=threads)
     {
@@ -40,6 +41,7 @@ __global__ void decimate (GPUCSRGraph clauses, GPUCSRGraph vars, Edge ed, int *g
 }
 
 void launch_kernel(unsigned int nb, unsigned int nt, GPUCSRGraph clauses, GPUCSRGraph vars, Edge ed, int *g_bias_list_vars,const int * bias_list_len, int fixperstep) {
+    //printf("bias_list_len = %d \n", *bias_list_len);
     decimate<<<nb, nt>>>(clauses, vars, ed, g_bias_list_vars, bias_list_len, fixperstep);
 }
 

@@ -67,7 +67,7 @@ __global__ void dfindelemin(unsigned *mstwt, Graph graph, ComponentSpace cs, for
                 }
             }
         }
-        dprintf("\tminwt[%d] = %d\n", id, minwt);
+        //dprintf("\tminwt[%d] = %d\n", id, minwt);
         eleminwts[id] = minwt;
         partners[id] = dstboss;
 

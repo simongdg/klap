@@ -80,6 +80,7 @@ __global__ void verify_min_elem_cdp(unsigned *mstwt, Graph graph, ComponentSpace
 }
 
 void launch_find_kernel(unsigned int nb, unsigned int nt, unsigned *mstwt, Graph graph, ComponentSpace cs, foru *eleminwts, foru *minwtcomponent, unsigned *partners, unsigned *phore, bool *processinnextiteration, unsigned *goaheadnodeofcomponent, unsigned inpid) {
+    //std::cout<<"nb = "<< nb <<", nt = "<<nt<<"\n";
     dfindelemin2_cdp<<<nb, nt>>>(mstwt, graph, cs, eleminwts, minwtcomponent, partners, phore, processinnextiteration, goaheadnodeofcomponent, inpid);
 }
 

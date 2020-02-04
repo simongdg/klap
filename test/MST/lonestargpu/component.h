@@ -3,115 +3,131 @@ struct ComponentSpace {
 	
 	__device__ unsigned numberOfElements();
 	__device__ unsigned numberOfComponents();
-	__device__ bool isBoss(unsigned element);
-	__device__ unsigned find(unsigned lelement, bool compresspath = true);
-	__device__ bool unify(unsigned one, unsigned two);
-	__device__ void print1x1();
-	__host__   void print();
-        __host__   void copy(ComponentSpace &two);
-        void dump_to_file(const char *F);
-	void allocate();
-	void init();
-	unsigned numberOfComponentsHost();
+            __device__ bool isBoss(unsigned element);
+            __device__ unsigned find(unsigned lelement, bool compresspath = true);
+            __device__ bool unify(unsigned one, unsigned two);
+            __device__ void print1x1();
+            __host__   void print();
+                __host__   void copy(ComponentSpace &two);
 
-	unsigned nelements;
-	unsigned *ncomponents,			// number of components.
-		 *complen, 			// lengths of components.
-		 *ele2comp;			// components of elements.
-};
-inline ComponentSpace::ComponentSpace(unsigned nelements) {
-	this->nelements = nelements;
+            //for tangram:
+            __host__ unsigned* getEle2comp();
+            //for tangram
 
-	allocate();
-	init();
-}
+                void dump_to_file(const char *F);
+            void allocate();
+            void init();
+            unsigned numberOfComponentsHost();
 
-inline void ComponentSpace::dump_to_file(const char *F)
-{
-  static FILE *f;
-  static unsigned *mem;
+            unsigned nelements;
+            unsigned *ncomponents,			// number of components.
+                 *complen, 			// lengths of components.
+                 *ele2comp;			// components of elements.
+        };
 
-  if(!f)
-    {
-      f = fopen(F, "w");
-      mem = (unsigned *) calloc(nelements, sizeof(unsigned));
-    }
+        //for tangram
+        inline unsigned* ComponentSpace::getEle2comp(){
+            return ele2comp;
+        }
+        //for tangram
 
-  assert(cudaMemcpy(mem, ele2comp, nelements * sizeof(unsigned), cudaMemcpyDeviceToHost) == cudaSuccess);
+        inline ComponentSpace::ComponentSpace(unsigned nelements) {
+            this->nelements = nelements;
 
-  int i;
-  for(i = 0; i < nelements; i++)
-    {
-      fprintf(f, "%d %d\n", i, mem[i]);
-    }
-  fprintf(f, "\n");
-}
+            allocate();
+            init();
+        }
 
-inline void ComponentSpace::copy(ComponentSpace &two)
-{
-  assert(cudaMemcpy(two.ncomponents, ncomponents, sizeof(unsigned), cudaMemcpyDeviceToDevice) == 0);
-  assert(cudaMemcpy(two.ele2comp, ele2comp, sizeof(unsigned) * nelements, cudaMemcpyDeviceToDevice) == 0);
-  assert(cudaMemcpy(two.complen, complen, sizeof(unsigned) * nelements, cudaMemcpyDeviceToDevice) == 0);
-}
-inline __device__ void ComponentSpace::print1x1() {
-	printf("\t\t-----------------\n");
-	for (unsigned ii = 0; ii < nelements; ++ii) {
-		printf("\t\t%d -> %d\n", ii, ele2comp[ii]);
-	}	
-	printf("\t\t-----------------\n");
-}
-static __global__ void print1x1(ComponentSpace cs) {
-	cs.print1x1();
-}
-inline __host__ void ComponentSpace::print() {
-	::print1x1<<<1,1>>>(*this);
-	CudaTest("cs.print1x1 failed");
-}
-inline __device__ unsigned ComponentSpace::numberOfElements() {
-	return nelements;
-}
-inline __device__ unsigned ComponentSpace::numberOfComponents() {
-	return *ncomponents;
-}
-inline unsigned ComponentSpace::numberOfComponentsHost() {
-	unsigned hncomponents = 0;
-	cudaMemcpy(&hncomponents, ncomponents, sizeof(unsigned), cudaMemcpyDeviceToHost);
-	return hncomponents;
-}
-inline void ComponentSpace::allocate() {
-	if (cudaMalloc((void **)&ncomponents, 1 * sizeof(unsigned)) != cudaSuccess) 
-		CudaTest("allocating ncomponents failed");
-	if (cudaMalloc((void **)&complen, nelements * sizeof(unsigned)) != cudaSuccess) 
-		CudaTest("allocating complen failed");
-	if (cudaMalloc((void **)&ele2comp, nelements * sizeof(unsigned)) != cudaSuccess) 
-		CudaTest("allocating ele2comp failed");
-}
-static __global__ void dinitcs(unsigned nelements, unsigned *complen, unsigned *ele2comp) {
-	unsigned id = blockIdx.x * blockDim.x + threadIdx.x;
-	if (id < nelements) {
-		//elements[id] 	= id;
-		complen[id]	= 1;
-		ele2comp[id]	= id;
-	}
-}
-inline void ComponentSpace::init() {
-	// init the elements.
-	unsigned blocksize = MAXBLOCKSIZE;	////
-	unsigned nblocks = (nelements + blocksize - 1) / blocksize;
-	dinitcs<<<nblocks, blocksize>>>(nelements, complen, ele2comp);
-	CudaTest("dinitcs failed");
+        inline void ComponentSpace::dump_to_file(const char *F)
+        {
+          static FILE *f;
+          static unsigned *mem;
 
-	// init number of components.
-	cudaMemcpy(ncomponents, &nelements, sizeof(unsigned), cudaMemcpyHostToDevice);
-}
-inline __device__ bool ComponentSpace::isBoss(unsigned element) {
-  return atomicCAS(&ele2comp[element],element,element) == element;
-}
-inline __device__ unsigned ComponentSpace::find(unsigned lelement, bool compresspath/*= true*/) {
+          if(!f)
+            {
+              f = fopen(F, "w");
+              mem = (unsigned *) calloc(nelements, sizeof(unsigned));
+            }
+
+          assert(cudaMemcpy(mem, ele2comp, nelements * sizeof(unsigned), cudaMemcpyDeviceToHost) == cudaSuccess);
+
+          int i;
+          for(i = 0; i < nelements; i++)
+            {
+              fprintf(f, "%d %d\n", i, mem[i]);
+            }
+          fprintf(f, "\n");
+        }
+
+        inline void ComponentSpace::copy(ComponentSpace &two)
+        {
+          assert(cudaMemcpy(two.ncomponents, ncomponents, sizeof(unsigned), cudaMemcpyDeviceToDevice) == 0);
+          assert(cudaMemcpy(two.ele2comp, ele2comp, sizeof(unsigned) * nelements, cudaMemcpyDeviceToDevice) == 0);
+          assert(cudaMemcpy(two.complen, complen, sizeof(unsigned) * nelements, cudaMemcpyDeviceToDevice) == 0);
+        }
+        inline __device__ void ComponentSpace::print1x1() {
+            printf("\t\t-----------------\n");
+            for (unsigned ii = 0; ii < nelements; ++ii) {
+                printf("\t\t%d -> %d\n", ii, ele2comp[ii]);
+            }	
+            printf("\t\t-----------------\n");
+        }
+        static __global__ void print1x1(ComponentSpace cs) {
+            cs.print1x1();
+        }
+        inline __host__ void ComponentSpace::print() {
+            ::print1x1<<<1,1>>>(*this);
+            CudaTest("cs.print1x1 failed");
+        }
+        inline __device__ unsigned ComponentSpace::numberOfElements() {
+            return nelements;
+        }
+        inline __device__ unsigned ComponentSpace::numberOfComponents() {
+            return *ncomponents;
+        }
+        inline unsigned ComponentSpace::numberOfComponentsHost() {
+            unsigned hncomponents = 0;
+            cudaMemcpy(&hncomponents, ncomponents, sizeof(unsigned), cudaMemcpyDeviceToHost);
+            return hncomponents;
+        }
+        inline void ComponentSpace::allocate() {
+            if (cudaMalloc((void **)&ncomponents, 1 * sizeof(unsigned)) != cudaSuccess) 
+                CudaTest("allocating ncomponents failed");
+            if (cudaMalloc((void **)&complen, nelements * sizeof(unsigned)) != cudaSuccess) 
+                CudaTest("allocating complen failed");
+            if (cudaMalloc((void **)&ele2comp, nelements * sizeof(unsigned)) != cudaSuccess) 
+                CudaTest("allocating ele2comp failed");
+        }
+        static __global__ void dinitcs(unsigned nelements, unsigned *complen, unsigned *ele2comp) {
+            unsigned id = blockIdx.x * blockDim.x + threadIdx.x;
+            if (id < nelements) {
+                //elements[id] 	= id;
+                complen[id]	= 1;
+                ele2comp[id]	= id;
+            }
+        }
+        inline void ComponentSpace::init() {
+            // init the elements.
+            unsigned blocksize = MAXBLOCKSIZE;	////
+            unsigned nblocks = (nelements + blocksize - 1) / blocksize;
+            dinitcs<<<nblocks, blocksize>>>(nelements, complen, ele2comp);
+            CudaTest("dinitcs failed");
+
+            // init number of components.
+            cudaMemcpy(ncomponents, &nelements, sizeof(unsigned), cudaMemcpyHostToDevice);
+        }
+        inline __device__ bool ComponentSpace::isBoss(unsigned element) {
+          return atomicCAS(&ele2comp[element],element,element) == element;
+        }
+        inline __device__ unsigned ComponentSpace::find(unsigned lelement, bool compresspath/*= true*/) {
 	// do we need to worry about concurrency in this function?
 	// for other finds, no synchronization necessary as the data-structure is a tree.
 	// for other unifys, synchornization is not required considering that unify is going to affect only bosses, while find is going to affect only non-bosses.
 	unsigned element = lelement;
+    //if(blockIdx.x == 0 && threadIdx.x == 0){
+    //    printf("element = %d\n", element);
+    //  }
+
 	while (isBoss(element) == false) {
 	  element = ele2comp[element];
 	}

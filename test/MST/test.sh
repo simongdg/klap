@@ -1,6 +1,6 @@
 
 NAME=mst
-VERSIONS='base aw ab ag'
+VERSIONS='tangram_dynamic tangram base aw ab ag'
 RUNS=10
 FILE=$NAME.csv
 

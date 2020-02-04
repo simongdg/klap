@@ -113,12 +113,6 @@ __global__ void BFS_28(unsigned int *p_levels_29, int ObjectSize_109,
                         ? tile_40
                         : (blockBound - (threadIdx.x * tile_40));
 
-   /* BFS_58(unsigned int *p_levels_59, int ObjectSize_95, int SourceSize_96,
-       unsigned int *levels_60, int ObjectSize_97, unsigned int *edgeArray_61,
-       int ObjectSize_98, unsigned int *edgeArrayAux_62, int SourceSize_99,
-       int OffsetEnd_100, const unsigned int numVerts_63, int curr_64,
-       int *flag_65) {
-*/
     BFS_58 << <gridDim.x, blockDim.x>>>
         (part_levels_42 + (threadIdx.x*tile_40), tile_dyn /*x_size_39*/,
          OffsetEnd /*(p_38 * tile_40)*/, /*p_38,*/

@@ -36,6 +36,8 @@
 #else
 #define CUDA_SAFE_CALL(x)
 
+#define TANGRAM 0
+
 namespace cub {
     template<typename T, int i>
     class BlockReduce {
@@ -428,19 +430,19 @@ int compare_float(const void *x, const void *y)
 
 float sort_bias_list(cub::DoubleBuffer<float> &db_bias_list,
         cub::DoubleBuffer<int> &db_bias_list_vars,
-        int *g_bias_list_len, float summag, int& fixperstep)
+        int *g_bias_list_len, int *bias_list_len, float summag, int& fixperstep)
 {
-    int bias_list_len;
+    //int bias_list_len;
     static void *d_temp_storage = NULL;
     static size_t temp_storage_bytes = 0;
 
-    CUDA_SAFE_CALL(cudaMemcpy(&bias_list_len, g_bias_list_len, 1 * sizeof(int), cudaMemcpyDeviceToHost));
+    CUDA_SAFE_CALL(cudaMemcpy(bias_list_len, g_bias_list_len, 1 * sizeof(int), cudaMemcpyDeviceToHost));
 
     float r = 0;
 
-    if(bias_list_len)
+    if(*bias_list_len)
     {
-        r = (summag / bias_list_len);
+        r = (summag / *bias_list_len);
 
 #if PRINT
         printf("<bias>:%f\n", r);
@@ -452,7 +454,7 @@ float sort_bias_list(cub::DoubleBuffer<float> &db_bias_list,
         if(d_temp_storage == NULL)
         {
             cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, db_bias_list,
-                    db_bias_list_vars, bias_list_len);
+                    db_bias_list_vars, *bias_list_len);
 
             // Allocate temporary storage for sorting operation
             CUDA_SAFE_CALL(cudaMalloc(&d_temp_storage, temp_storage_bytes));
@@ -460,9 +462,9 @@ float sort_bias_list(cub::DoubleBuffer<float> &db_bias_list,
 
         // Run sorting operation
         cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, db_bias_list,
-                db_bias_list_vars, bias_list_len);
+                db_bias_list_vars, *bias_list_len);
 
-        if(fixperstep > bias_list_len)
+        if(fixperstep > *bias_list_len)
             fixperstep = 1;
     }
 
@@ -506,22 +508,22 @@ int converge(GPUCSRGraph &g_cl, GPUCSRGraph &g_vars, Edge &g_ed, float *g_max_ep
 
 int build_list(GPUCSRGraph &g_cl, GPUCSRGraph &g_vars, Edge &g_ed, float *g_summag,
         cub::DoubleBuffer<float> &db_bias_list, cub::DoubleBuffer<int> &db_bias_list_vars,
-        int *g_bias_list_len, int &fixperstep)
+        int *g_bias_list_len, int *bias_list_len, int &fixperstep)
 {
     float summag;
-    int bias_list_len;
+    //int bias_list_len;
     static size_t updb_res = maximum_residency(update_bias, 384, 0);//Comment
 
     summag = 0;
     CUDA_SAFE_CALL(cudaMemcpy(g_summag, &summag, sizeof(summag), cudaMemcpyHostToDevice));
 
-    bias_list_len = 0;
-    CUDA_SAFE_CALL(cudaMemcpy(g_bias_list_len, &bias_list_len, sizeof(int) * 1, cudaMemcpyHostToDevice));
+    *bias_list_len = 0;
+    CUDA_SAFE_CALL(cudaMemcpy(g_bias_list_len, bias_list_len, sizeof(int) * 1, cudaMemcpyHostToDevice));
     update_bias<<<nSM * updb_res, 384>>>(g_cl, g_vars, g_ed, db_bias_list.Current(),
             db_bias_list_vars.Current(), g_bias_list_len, g_summag);
     CUDA_SAFE_CALL(cudaMemcpy(&summag, g_summag, sizeof(summag), cudaMemcpyDeviceToHost));
 
-    float limitbias = sort_bias_list(db_bias_list, db_bias_list_vars, g_bias_list_len, summag, fixperstep);
+    float limitbias = sort_bias_list(db_bias_list, db_bias_list_vars, g_bias_list_len, bias_list_len, summag, fixperstep);
     if(limitbias < PARAMAGNET)
     {
         //printf("paramagnetic state\n");
@@ -589,7 +591,7 @@ int main(int argc, char *argv[])
     float *g_max_eps;
     float *g_bias_list, *g_bias_list_2;
     int *g_bias_list_vars, *g_bias_list_vars_2;
-    int *g_bias_list_len;
+    int *g_bias_list_len, *bias_list_len;
     float *g_summag;
     const size_t d2_res = maximum_residency(decimate, 384, 0);
     init_from_file(fileName, max_literals, cl, vars, ed);
@@ -601,6 +603,7 @@ int main(int argc, char *argv[])
     CUDA_SAFE_CALL(cudaMalloc(&g_bias_list_vars, g_vars.nnodes * sizeof(int)));
     CUDA_SAFE_CALL(cudaMalloc(&g_bias_list_vars_2, g_vars.nnodes * sizeof(int)));
     CUDA_SAFE_CALL(cudaMalloc(&g_bias_list_len, sizeof(int)));
+    bias_list_len = (int*)malloc(sizeof(int));
     cub::DoubleBuffer<float> db_bias_list(g_bias_list, g_bias_list_2);
     cub::DoubleBuffer<int> db_bias_list_vars(g_bias_list_vars, g_bias_list_vars_2);
     cudaDeviceSetLimit(cudaLimitDevRuntimePendingLaunchCount, d2_res*nSM*384); // Fixed-size pool
@@ -632,16 +635,21 @@ int main(int argc, char *argv[])
 
             if(build_list(g_cl, g_vars, g_ed, g_summag,
                         db_bias_list, db_bias_list_vars,
-                        g_bias_list_len,
+                        g_bias_list_len, bias_list_len,
                         canfix))
                 break;
 
             CUDA_SAFE_CALL(cudaDeviceSynchronize());
             starttime = rtclock();
 
+            std::cout<<"bias_list_len = " << *bias_list_len <<"\n";
+#if TANGRAM
+            launch_kernel(d2_res * nSM, 384, g_cl, g_vars, g_ed,
+                    db_bias_list_vars.Current(), g_bias_list_len, bias_list_len, canfix);
+#else
             launch_kernel(d2_res * nSM, 384, g_cl, g_vars, g_ed,
                     db_bias_list_vars.Current(), g_bias_list_len, canfix);
-
+#endif
             CUDA_SAFE_CALL(cudaDeviceSynchronize());
             endtime = rtclock();
             runtime += (1000.0 * (endtime - starttime));

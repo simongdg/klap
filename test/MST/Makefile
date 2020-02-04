@@ -11,9 +11,12 @@ INCLUDE  = -I. -I../../include
 
 SRC = main.cu
 OBJ = $(SRC:.cu=.o)
-BIN = $(NAME).base $(NAME).aw $(NAME).ab $(NAME).ag
+BIN = $(NAME).tangram_dynamic $(NAME).tangram $(NAME).base $(NAME).aw $(NAME).ab $(NAME).ag
 
 base: $(NAME).base
+tangram: $(NAME).tangram
+tangram_dynamic: $(NAME).tangram_dynamic
+
 
 all: $(BIN)
 
