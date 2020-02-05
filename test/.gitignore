@@ -15,5 +15,5 @@
 *.ag.cu
 
 # CSV files with timing data
-*.csv
+# *.csv
 

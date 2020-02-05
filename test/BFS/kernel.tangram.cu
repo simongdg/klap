@@ -133,6 +133,6 @@ void launch_kernel(unsigned int *d_costArray, unsigned int *d_edgeArray,
   unsigned int numBlocks = (numVerts - 1) / PARENT_BLOCK_SIZE + 1;
   //printf("numBlocks = %d\n", numBlocks);
   //std::cout<<"numBlocks = " << numBlocks <<", PARENT_BLOCK_SIZE = " << PARENT_BLOCK_SIZE + 1 <<std::endl;
-  BFS_tangram<10, 1024>(d_costArray, d_edgeArray, d_edgeArrayAux, numVerts, 1,
+  BFS_tangram<GRID_DIM, BLOCK_DIM>(d_costArray, d_edgeArray, d_edgeArrayAux, numVerts, 1,
                       iters, d_flag);
 }

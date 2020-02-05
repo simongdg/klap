@@ -121,7 +121,7 @@ void SSSP_tangram(unsigned int *dist_2, unsigned int *outgoing_3,
 
 void launch_kernel(unsigned int nb, unsigned int nt, foru *dist, Graph graph,
                    bool *changed) {
-  SSSP_tangram<32, 128>((unsigned int *)dist, graph.getNoutGoing(),
+  SSSP_tangram<GRID_DIM, BLOCK_DIM>((unsigned int *)dist, graph.getNoutGoing(),
                         graph.getSrcsrc(), graph.getPsrc(),
                         graph.getEdgessrcdst(), graph.getEdgessrcwt(), changed,
                         graph.getNnodes(), graph.getNedges());

@@ -115,6 +115,6 @@ void GC_tangram(
 }
 
 void launch_kernel(unsigned int dimGrid_confl, unsigned int dimBlock_confl, int *adjacentListD, int *boundaryListD, int *colors, int *conflictD, long size, int boundarySize, int maxDegree) {
-    GC_tangram<10, 1024>(adjacentListD, boundaryListD, colors, conflictD, size, boundarySize, maxDegree);
+    GC_tangram<GRID_DIM, BLOCK_DIM>(adjacentListD, boundaryListD, colors, conflictD, size, boundarySize, maxDegree);
 }
 

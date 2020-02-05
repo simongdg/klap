@@ -5,17 +5,17 @@ NVCC = nvcc
 KLAP = klap
 
 ARCH = -gencode arch=compute_60,code=sm_60 -gencode arch=compute_60,code=sm_60
-FLAGS = -Xcompiler '-fPIC' -dc -m64 --default-stream per-thread
+FLAGS = -Xcompiler '-fPIC' -dc -m64 --default-stream per-thread -D GRID_DIM=16 -D BLOCK_DIM=1024
 
 INCLUDE  = -I. -I../../include
 
 SRC = main.cu graph.cu
 OBJ = $(SRC:.cu=.o)
-BIN = $(NAME).tangram_dynamic $(NAME).tangram $(NAME).base $(NAME).aw $(NAME).ab $(NAME).ag
+BIN = $(NAME).tangram_dynamic $(NAME).tangram $(NAME).base #$(NAME).aw $(NAME).ab $(NAME).ag
 
-base: $(NAME).base
-tangram: $(NAME).tangram
-tangram_dynamic: $(NAME).tangram_dynamic
+# base: $(NAME).base
+# tangram: $(NAME).tangram
+# tangram_dynamic: $(NAME).tangram_dynamic
 
 all: $(BIN)
 
@@ -34,7 +34,7 @@ $(NAME).%: kernel.%.o $(OBJ)
 	$(NVCC) $(ARCH) -o $@ $+ -lcudadevrt 
 
 clean:
-	rm -f *.o *.csv $(BIN) kernel.a?.cu kernel.de.cu
+	rm -f *.o  $(BIN) kernel.a?.cu kernel.de.cu
 
 test:
 	./test.sh
